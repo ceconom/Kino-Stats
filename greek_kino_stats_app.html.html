@@ -1,0 +1,53 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greek Kino Stats</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; color: #333; }
+        h1 { text-align: center; }
+        .section { margin: 20px 0; padding: 15px; background: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+        button { padding: 10px 20px; font-size: 16px; margin-top: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .results { font-size: 18px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Greek Kino Live Stats</h1>
+    <div class="section">
+        <p>Tap the button below to fetch the latest Greek Kino data and get a smart number suggestion!</p>
+        <button onclick="fetchData()">Get Latest Combo</button>
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        async function fetchData() {
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = "Loading data...";
+            try {
+                const response = await fetch("https://api.opap.gr/draws/v3.0/1100/last/12");
+                const data = await response.json();
+                const allNumbers = [].concat(...data.content.map(draw => draw.winningNumbers.list));
+                const freq = {};
+                for (let num of allNumbers) {
+                    freq[num] = (freq[num] || 0) + 1;
+                }
+                const sorted = Object.entries(freq).sort((a,b) => b[1] - a[1]);
+                const hot = sorted.slice(0, 10);
+                const cold = sorted.slice(-10);
+                const combo = hot.slice(0, 3).map(n => n[0]).concat(cold.slice(0, 2).map(n => n[0]));
+
+                resultsDiv.innerHTML = `
+                    <b>Hot Numbers:</b> ${hot.map(n => n[0] + " (" + n[1] + ")").join(", ")}<br>
+                    <b>Cold Numbers:</b> ${cold.map(n => n[0] + " (" + n[1] + ")").join(", ")}<br>
+                    <b>Suggested Combo:</b> ${combo.join(", ")}
+                `;
+            } catch (err) {
+                resultsDiv.innerHTML = "Failed to load data. Please try again.";
+            }
+        }
+    </script>
+</body>
+</html>
